@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-test
+  labels:
+    type: user
+    user: test
+data:
+  uid: "1111"
+  gid: "1111"
+  home: /home/test
+  shell: /bin/bash

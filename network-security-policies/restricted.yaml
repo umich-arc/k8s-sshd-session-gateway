@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-network
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      network: restricted
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          session: "true"
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          session: "true"

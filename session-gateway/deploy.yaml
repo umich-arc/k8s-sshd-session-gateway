@@ -1,0 +1,131 @@
+# Capabilities are dropped assuming Docker is in use (minikube)
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: session-gateway
+  labels:
+    app: session-gateway
+    network: unrestricted
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: session-gateway
+      network: unrestricted
+  template:
+    metadata:
+      labels:
+        app: session-gateway
+        network: unrestricted
+    spec:
+      serviceAccount: session-gateway
+      containers:
+        - name: logs
+          image: arcts/rsyslog:1.1.0
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              drop:
+                - AUDIT_WRITE
+                - CHOWN
+                - DAC_OVERRIDE
+                - FOWNER
+                - FSETID
+                - MKNOD
+                - NET_RAW
+                - SETFCAP
+                - SETGID
+                - SETUID
+                - SYS_CHROOT
+          volumeMounts:
+            - name: syslog
+              mountPath: /syslog
+        - name: gateway
+          image: sshd-gateway
+          command: ["./scripts/gateway-entrypoint.sh"]
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 22
+          securityContext:
+            capabilities:
+              drop:
+                - AUDIT_WRITE
+                - DAC_OVERRIDE
+                - FOWNER
+                - FSETID
+                - MKNOD
+                - SETFCAP
+          volumeMounts:
+            - name: passwd
+              mountPath: /etc/passwd
+              readOnly: true
+              subPath: passwd
+            - name: group
+              mountPath: /etc/group
+              readOnly: true
+              subPath: group
+            - name: shadow
+              mountPath: /etc/shadow
+              readOnly: true
+              subPath: shadow
+            - name: sshd-config
+              mountPath: /etc/ssh/sshd_config
+              subPath: sshd_config
+              readOnly: true
+            - name: sshd-pam
+              mountPath: /etc/pam.d/sshd
+              subPath: sshd
+              readOnly: true
+            - name: host-keys
+              mountPath: /etc/ssh/keys
+            - name: scripts
+              mountPath: /scripts
+              readOnly: true
+            - name: templates
+              mountPath: /templates
+              readOnly: true
+            - name: syslog
+              mountPath: /syslog
+      volumes:
+        - name: passwd
+          configMap:
+            name: config-idm
+            items:
+              - key: passwd
+                path: passwd
+        - name: group
+          configMap:
+            name: config-idm
+            items:
+              - key: group
+                path: group
+        - name: shadow
+          secret:
+            secretName: config-idm-shadow
+            defaultMode: 0640
+        - name: sshd-config
+          configMap:
+            name: config-sshd
+            items:
+              - key: sshd_config
+                path: sshd_config
+        - name: sshd-pam
+          configMap:
+            name: config-sshd
+            items:
+              - key: sshd
+                path: sshd
+        - name: host-keys
+          secret:
+            secretName: config-sshd-host-keys
+            defaultMode: 0600
+        - name: scripts
+          configMap:
+            name: script-session-gateway
+            defaultMode: 0755
+        - name: templates
+          configMap:
+            name: template-session-host
+            defaultMode: 0644
+        - name: syslog
+          emptyDir: {}

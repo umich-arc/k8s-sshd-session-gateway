@@ -1,0 +1,22 @@
+Port 22
+Protocol 2
+LoginGraceTime 120
+LogLevel INFO
+PermitRootLogin no
+StrictModes yes
+PasswordAuthentication no
+ChallengeResponseAuthentication yes
+IgnoreRhosts yes
+HostbasedAuthentication no
+PermitEmptyPasswords no
+AcceptEnv LANG LC_*
+AcceptEnv rm
+HostKey /etc/ssh/keys/ssh_host_rsa_key
+HostKey /etc/ssh/keys/ssh_host_dsa_key
+HostKey /etc/ssh/keys/ssh_host_ecdsa_key
+HostKey /etc/ssh/keys/ssh_host_ed25519_key
+UsePAM yes
+ForceCommand image=ubuntu-ip:latest /scripts/session-spawner.sh
+
+Match User test
+    ForceCommand image=centos-sudo:latest template=/templates/unrestricted.json /scripts/session-spawner.sh

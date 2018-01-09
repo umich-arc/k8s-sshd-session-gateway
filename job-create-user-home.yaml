@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-user-home
+spec:
+  template:
+    metadata:
+      name: create-user-home
+    spec:
+      containers:
+      - name: create-user-home
+        image: sshd-gateway
+        imagePullPolicy: Never
+        command: [ "/scripts/create-users.sh"]
+        volumeMounts:
+          - name: user-home
+            mountPath: "/user_home"
+          - name: scripts
+            mountPath: "/scripts"
+      restartPolicy: OnFailure
+      volumes:
+      - name: user-home
+        persistentVolumeClaim:
+          claimName: home
+      - name: scripts
+        configMap:
+          name: script-session-gateway
+          defaultMode: 0755

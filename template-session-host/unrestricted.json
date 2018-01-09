@@ -1,0 +1,121 @@
+{
+  "spec": {
+    "strategy": {
+        "type": "Recreate"
+      },
+    "template": {
+      "metadata": {
+        "labels": {
+          "network": "unrestricted"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": false,
+        "containers": [{
+          "image": "__IMAGE__",
+          "stdin": true,
+          "tty": true,
+          "imagePullPolicy": "IfNotPresent",
+          "name": "session-host",
+          "securityContext": {
+            "runAsUser": __UID__
+          },
+          "volumeMounts": [{
+              "mountPath": "/etc/passwd",
+              "name": "userdata",
+              "readOnly": true,
+              "subPath": "passwd"
+            },
+            {
+              "mountPath": "/etc/group",
+              "name": "userdata",
+              "readOnly": true,
+              "subPath": "group"
+            },
+            {
+              "mountPath": "/etc/sudoers.d/sudo_user",
+              "name": "userdata",
+              "readOnly": true,
+              "subPath": "sudo_user"
+            },
+            {
+                "mountPath": "/home/__USER__",
+                "name": "home",
+                "subPath": "__USER__"
+            }
+          ]
+        }],
+        "initContainers": [{
+          "command": [
+            "./scripts/add-session-user.sh"
+          ],
+          "env": [{
+            "name": "SESSION_USER",
+            "value": "__USER__"
+          }],
+          "image": "__IMAGE__",
+          "imagePullPolicy": "IfNotPresent",
+          "name": "add-session-user",
+          "volumeMounts": [{
+              "mountPath": "/scripts",
+              "name": "scripts"
+            },
+            {
+              "mountPath": "/userconfig",
+              "name": "userconfig"
+            },
+            {
+              "mountPath": "/userdata",
+              "name": "userdata"
+            }
+          ]
+        },
+        {
+          "command": [ "/bin/sh" ],
+          "args": [ "-c", "echo \"$(SESSION_USER) ALL=(ALL) NOPASSWD:ALL\" > /userdata/sudo_user"
+          ],
+          "env": [{
+            "name": "SESSION_USER",
+            "value": "__USER__"
+          }],
+          "image": "__IMAGE__",
+          "imagePullPolicy": "IfNotPresent",
+          "name": "add-sudo-user",
+          "volumeMounts": [{
+              "mountPath": "/userdata",
+              "name": "userdata"
+            }
+          ]
+        }],
+        "securityContext": {
+          "fsGroup": __GID__,
+          "supplementalGroups": [__GID__]
+        },
+        "volumes": [{
+            "configMap": {
+              "defaultMode": 420,
+              "name": "user-__USER__"
+            },
+            "name": "userconfig"
+          },
+          {
+            "configMap": {
+              "defaultMode": 448,
+              "name": "script-session-host"
+            },
+            "name": "scripts"
+          },
+          {
+            "emptyDir": {},
+            "name": "userdata"
+          },
+          {
+            "name": "home",
+            "persistentVolumeClaim": {
+              "claimName": "home"
+          }
+        }]
+      }
+    }
+  }
+}

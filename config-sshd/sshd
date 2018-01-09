@@ -1,0 +1,4 @@
+account   include     base-account
+auth      include     base-auth
+auth      required    pam_env.so
+auth      required    pam_nologin.so  successok
