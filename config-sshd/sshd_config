@@ -19,4 +19,4 @@ UsePAM yes
 ForceCommand image=ubuntu-ip:latest /scripts/session-spawner.sh
 
 Match User test
-    ForceCommand image=centos-sudo:latest template=/templates/unrestricted.json /scripts/session-spawner.sh
+    ForceCommand image=centos-sudo:latest template=unrestricted.json /scripts/session-spawner.sh

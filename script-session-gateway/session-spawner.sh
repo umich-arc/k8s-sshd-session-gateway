@@ -1,7 +1,7 @@
 #!/bin/sh
 
 export rm=${rm:-false}
-export template=${template:-'/templates/default.json'}
+export template=${template:-'restricted.json'}
 export image=${image:-'ubuntu:latest'}
 
 exec_session() {
@@ -10,7 +10,7 @@ exec_session() {
   shell=$(kubectl get cm "user-$USER" -o jsonpath='{.data.shell}')
   overrides=$(
     sed -e "s/__UID__/$uid/g" -e "s/__USER__/$USER/g" \
-        -e "s/__GID__/$gid/g" -e "s/__IMAGE__/$image/g" "$template"
+        -e "s/__GID__/$gid/g" -e "s/__IMAGE__/$image/g" "/templates/$template"
   )
   echo "[$(date)][INFO] Starting session instance $pod_name with image $image rm: $rm"
   exec kubectl run "session-$USER" --rm="$rm" -i -t \

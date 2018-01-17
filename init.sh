@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if ! minikube status | grep "cluster: Running"; then
+  echo "[$(date)][INFO] Starting minikube"
+  minikube start
+else
+  echo "[$(date)][INFO] Minikube running."
+fi
+
 echo "[$(date)][INFO] Checking for container image presence."
 eval "$(minikube docker-env)"
 if [ "$(docker images sshd-gateway -q)" == "" ]; then
@@ -71,9 +78,6 @@ for (( i=0; i<${secret_length}; i++ )); do
   kubectl label secret "${secret_items[$i]}" type="${secret_types[$i]}"
 done
 
-echo "[$(date)][INFO] Creating Network Security Policies."
-kubectl apply -f network-security-policies/
-
 echo "[$(date)][INFO] Creating User Home NFS Server"
 kubectl apply -f nfs-provisioner/
 while [ "$(kubectl get deploy nfs-provisioner --no-headers=true | awk '{print $5}')" != "1" ]; do
@@ -89,6 +93,10 @@ kubectl apply -f pvc-home.yaml
 
 echo "[$(date)][INFO] Preparing User Home"
 kubectl apply -f job-create-user-home.yaml
+while [ "$(kubectl get job create-user-home --no-headers=true | awk '{print $3}')" != "1" ]; do
+  echo "[$(date)][INFO] Waiting for user home directories to be created."
+  sleep 5
+done
 
 echo "[$(date)][INFO] Deploying session-gateway"
 kubectl apply -f session-gateway/

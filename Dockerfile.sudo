@@ -1,3 +1,5 @@
 FROM centos:latest
 
-RUN yum -y update && yum -y install sudo
+RUN yum -y update   \
+  && yum -y install \
+    sudo
