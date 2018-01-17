@@ -1,4 +1,4 @@
-### SSHD k8s Session Gateway
+### PoC - SSHD K8s Session Gateway
 
 
 ## Overview
@@ -12,7 +12,7 @@ It then uses one of several [pre-configured deployment json templates](template-
 
 These deployment templates strip the user session container down to a much smaller subset of linux capabilities, and configure the `securityContext` to run as the specific `uid` for the user, and adds the `gid` to the `suupplementalGroups` to ensure the home directory is mounted as the correct `uid` and `gid`. This measure is needed until the [`runAsGroup` feature](https://github.com/kubernetes/kubernetes/pull/52077) is implimented.
 
-Before the user's container spins up, an init container is executed using the same image. This init container executes the [add-session-user.sh](script-session-host/add-session-user.sh) script which copies the container's `/etc/passwd` and `/etc/group` files to a shared `emptyDir` volume and appends the user's `uid` and `gid` to the copied files.
+Before the user's container spins up, an init container is executed using the same image. This init container executes the [`add-session-user.sh`](script-session-host/add-session-user.sh) script which copies the container's `/etc/passwd` and `/etc/group` files to a shared `emptyDir` volume and appends the user's `uid` and `gid` to the copied files.
 
 When the session-host container starts, the copied `passwd` and `group` file are mounted read-only into the new container, allowing it to be started as that particular user without erroring, or presenting something similar to `I have no name!@d969c8e14f66:/$`.
 
